@@ -8,14 +8,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.exceptions import http_exception_handler, unhandled_exception_handler
 from app.middleware.rate_limit import RateLimitMiddleware
-from app.redis_client import redis_client
+from app.redis_client import close_redis
 from app.routers import job_postings
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     yield
-    await redis_client.aclose()
+    await close_redis()
 
 
 app = FastAPI(

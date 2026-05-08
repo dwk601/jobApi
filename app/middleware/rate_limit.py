@@ -8,12 +8,16 @@ from starlette.responses import Response
 
 from app.config import settings
 from app.constants import RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW
-from app.redis_client import redis_client
+from app.redis_client import get_redis
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
         if not settings.rate_limit_enabled:
+            return await call_next(request)
+
+        redis_client = get_redis()
+        if redis_client is None:
             return await call_next(request)
 
         client_ip = request.client.host if request.client else "unknown"
