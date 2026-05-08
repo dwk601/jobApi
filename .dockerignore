@@ -1,0 +1,16 @@
+venv/
+.venv/
+.ruff_cache/
+__pycache__/
+*.pyc
+*.pyo
+.agents/
+skills-lock.json
+.env
+.git/
+.gitignore
+start.sh
+test_connections.py
+*.md
+dist/
+*.egg-info/
