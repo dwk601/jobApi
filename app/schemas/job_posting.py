@@ -19,7 +19,7 @@ class JobPostingSummary(BaseModel):
     language: str | None
     post_date: date | None
     link: str | None
-    job_category: dict | None
+    job_category: dict | list | None
 
 
 class JobPostingDetail(JobPostingSummary):
@@ -31,7 +31,7 @@ class JobPostingDetail(JobPostingSummary):
     contact: str | None
     post_date_raw: str | None
     scraped_at: datetime
-    meta: dict | None
+    meta: dict | list | None
     created_at: datetime
     updated_at: datetime
 

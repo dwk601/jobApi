@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import Float, String, func, or_, select
+from sqlalchemy import Float, String, func, or_, select, text
 from sqlalchemy import cast as sa_cast
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -85,12 +85,17 @@ class JobPostingRepository:
         by_company = [CategoryCount(name=row[0], count=row[1]) for row in company_result.all()]
 
         salary_result = await self.db.execute(
-            select(
-                func.min(sa_cast(JobPosting.salary["min"], Float)),
-                func.max(sa_cast(JobPosting.salary["max"], Float)),
-                func.avg(sa_cast(JobPosting.salary["min"], Float)),
-                func.avg(sa_cast(JobPosting.salary["max"], Float)),
-            ).where(JobPosting.salary.isnot(None))
+            text(
+                """
+                SELECT
+                    MIN((salary ->> 'min')::FLOAT) FILTER (WHERE (salary ->> 'min') IS NOT NULL),
+                    MAX((salary ->> 'max')::FLOAT) FILTER (WHERE (salary ->> 'max') IS NOT NULL),
+                    AVG((salary ->> 'min')::FLOAT),
+                    AVG((salary ->> 'max')::FLOAT)
+                FROM job_postings
+                WHERE salary IS NOT NULL
+                """
+            )
         )
         salary_row = salary_result.one_or_none()
         salary_stats = None
@@ -129,11 +134,15 @@ class JobPostingRepository:
             )
         if params.salary_min is not None:
             stmt = stmt.where(
-                sa_cast(JobPosting.salary["max"], Float) >= params.salary_min
+                JobPosting.salary.isnot(None),
+                sa_cast(JobPosting.salary["max"].as_string(), Float)
+                >= params.salary_min,
             )
         if params.salary_max is not None:
             stmt = stmt.where(
-                sa_cast(JobPosting.salary["min"], Float) <= params.salary_max
+                JobPosting.salary.isnot(None),
+                sa_cast(JobPosting.salary["min"].as_string(), Float)
+                <= params.salary_max,
             )
         if params.job_category:
             stmt = stmt.where(
