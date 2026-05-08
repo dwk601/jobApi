@@ -1,12 +1,16 @@
-# Stage 1: dependencies
-FROM ghcr.io/astral-sh/uv:0.11.4 AS builder
+# Stage 1: extract uv binary from official uv image
+FROM ghcr.io/astral-sh/uv:0.11.4 AS uv-bin
+
+# Stage 2: build dependencies
+FROM python:3.12-slim AS builder
+COPY --from=uv-bin /uv /usr/local/bin/uv
 WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-install-project --no-dev
 
-# Stage 2: runtime
+# Stage 3: runtime
 FROM python:3.12-slim AS runtime
 RUN useradd --create-home --shell /bin/bash appuser
 WORKDIR /app
