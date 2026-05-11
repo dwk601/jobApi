@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import time
 
-from fastapi import HTTPException, Request
+from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
+from starlette.responses import JSONResponse, Response
 
 from app.config import settings
 from app.constants import RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW
@@ -30,9 +30,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             result = await pipe.execute()
 
         if result[0] > RATE_LIMIT_MAX_REQUESTS:
-            raise HTTPException(
+            return JSONResponse(
                 status_code=429,
-                detail="Rate limit exceeded. Please try again later.",
+                content={"detail": "Rate limit exceeded. Please try again later."},
                 headers={"Retry-After": str(RATE_LIMIT_WINDOW)},
             )
 
